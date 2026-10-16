@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# electron-vite build output (out/main, out/preload, out/renderer)
+out/
+
+# electron-builder packaged output
+release/
+
+# Claude Code local state (shared settings in .claude/ stay versioned)
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+# Logs
+*.log
+
+# OS
+.DS_Store

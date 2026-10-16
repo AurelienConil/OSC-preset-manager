@@ -1,0 +1,35 @@
+{
+  "name": "electron-workflow-template",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Electron template: plugin host (main / preload / renderer) + plugin SDK + two example plugins (OSC, weather) wired by the app mediator",
+  "main": "out/main/index.cjs",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "typecheck": "pnpm -r --no-bail exec vue-tsc -p .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "ws": "^8.18.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@template/plugin-osc": "workspace:*",
+    "@template/plugin-weather": "workspace:*",
+    "@template/sdk": "workspace:*",
+    "@types/node": "^22.7.0",
+    "@types/ws": "^8.5.12",
+    "@vitejs/plugin-vue": "^6.0.8",
+    "electron": "^32.1.0",
+    "electron-builder": "^25.0.5",
+    "electron-vite": "^2.3.0",
+    "typescript": "^5.6.0",
+    "vite": "^5.4.0",
+    "vite-plugin-vuetify": "^2.1.3",
+    "vitest": "^3.2.7",
+    "vue-tsc": "^3.3.13"
+  }
+}

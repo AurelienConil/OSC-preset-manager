@@ -1,0 +1,11 @@
+# Packaging configuration (electron-builder).
+# TODO before a real release: whitelist `files`, set electronLanguages and asarUnpack (CLAUDE.md §5.8).
+appId: com.example.electron-workflow-template
+productName: Electron Workflow Template
+asar: true
+compression: maximum
+directories:
+  output: release
+files:
+  - out/**/*
+  - package.json

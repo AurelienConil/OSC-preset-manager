@@ -1,0 +1,8 @@
+# Declares the pnpm workspaces of the monorepo (host packages + in-repo example plugins).
+packages:
+  - 'packages/*'
+  - 'plugins/*'
+allowBuilds:
+  electron: true
+  esbuild: true
+  vue-demi: true

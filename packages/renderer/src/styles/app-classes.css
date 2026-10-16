@@ -1,0 +1,128 @@
+/* Role: application CSS classes — app chrome, content helpers and reusable
+   patterns. Single place where the look of anything that is not a raw Vuetify
+   component is defined, so no .vue file ever needs its own CSS. */
+
+/* ============================================================
+   APP CHROME — sidebar, breadcrumb bar, content container
+   ============================================================ */
+.app-sidebar {
+  border-right: 1px solid var(--app-border) !important;
+}
+
+.app-breadcrumb-bar {
+  background: color-mix(in srgb, var(--app-surface) 82%, transparent) !important;
+  backdrop-filter: saturate(180%) blur(8px);
+  border-bottom: 1px solid var(--app-border) !important;
+}
+.app-breadcrumb-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.app-nav-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--app-text-faint);
+  padding: 14px 12px 4px;
+}
+
+/* Caps the readable line length of any page rendered in the content area. */
+.app-content-container {
+  max-width: 1180px;
+}
+
+/* ============================================================
+   TYPOGRAPHY HELPERS
+   ============================================================ */
+.page-title {
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--app-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-sub {
+  color: var(--app-text-soft);
+  font-size: 0.82rem;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.mono {
+  font-family: var(--app-mono);
+}
+
+/* ============================================================
+   ICON & AVATAR HELPERS
+   ============================================================ */
+.icon-muted {
+  opacity: 0.5;
+}
+.icon-faint {
+  color: var(--app-text-faint);
+}
+.avatar-initials {
+  font-weight: 700;
+}
+
+/* ============================================================
+   TABLE PATTERNS
+   ============================================================ */
+.cell-strong {
+  font-weight: 500;
+}
+/* Fixed-width trailing column holding the per-row action menu. */
+.col-actions {
+  width: 56px;
+}
+/* Row actions stay hidden until the row is hovered, Notion-style. */
+.row-actions {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.table-row:hover .row-actions {
+  opacity: 1;
+}
+
+/* ============================================================
+   MISC PATTERNS
+   ============================================================ */
+.kbd {
+  font-family: var(--app-mono);
+  font-size: 0.72rem;
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border-strong);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  padding: 1px 6px;
+  color: var(--app-text-soft);
+}
+
+.swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid var(--app-border-strong);
+}
+
+/* Short input (port, number) that must not stretch to the full row. */
+.field-narrow {
+  flex: 0 0 140px;
+}
+
+/* List or table that grows with its content up to a cap, then scrolls. */
+.scroll-list {
+  max-height: 260px;
+  overflow: auto;
+}

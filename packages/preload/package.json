@@ -1,0 +1,11 @@
+{
+  "name": "@template/preload",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Generic contextBridge publish/subscribe bus bridge exposed to the renderer.",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@template/shared": "workspace:*"
+  }
+}

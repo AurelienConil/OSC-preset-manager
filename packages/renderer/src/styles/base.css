@@ -1,0 +1,29 @@
+/* Role: minimal element reset + compact density base. No Vuetify overrides here
+   (those live in vuetify-overrides.css). */
+@import './tokens.css';
+
+* {
+  box-sizing: border-box;
+}
+
+/* Compact desktop density: every Vuetify rem size derives from this. */
+html {
+  font-size: var(--app-fs);
+}
+
+body {
+  margin: 0;
+  font-family: var(--app-font);
+  letter-spacing: 0.1px;
+  line-height: 1.5;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--app-border-strong);
+  border: 3px solid var(--app-bg-subtle);
+  border-radius: 8px;
+}

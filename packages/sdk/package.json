@@ -1,0 +1,21 @@
+{
+  "name": "@template/sdk",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Plugin SDK: contract definition, wire protocol, backend plugin API and Vue client.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./backend": "./src/backend/index.ts",
+    "./frontend": "./src/frontend/index.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.42",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "vue": "^3.5.42",
+    "zod": "^3.23.8"
+  }
+}

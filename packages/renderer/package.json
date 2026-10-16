@@ -1,0 +1,14 @@
+{
+  "name": "@template/renderer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Vue3 + Vuetify app shell template: retractable sidebar layout, CSS design tokens, Vuetify components.",
+  "dependencies": {
+    "@mdi/font": "^7.4.47",
+    "@template/sdk": "workspace:*",
+    "@template/shared": "workspace:*",
+    "vue": "^3.5.42",
+    "vuetify": "^4.2.0"
+  }
+}
