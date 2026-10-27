@@ -1,5 +1,5 @@
 <!-- Role: Vuetify app layout (sidebar + breadcrumb bar + content).
-     Wires props/emits between its children, no own logic. -->
+     Wires props/emits between its children, no own logic. Slot `toolbar`: forwarded to the top bar. -->
 <script setup lang="ts">
 import type { NavigationSection } from '../../navigation/types'
 import AppBreadcrumbBar from './AppBreadcrumbBar.vue'
@@ -36,7 +36,9 @@ const activeLabel = () =>
       :title="activeLabel()"
       :is-dark="isDark"
       @toggle-theme="emit('toggle-theme')"
-    />
+    >
+      <slot name="toolbar" />
+    </AppBreadcrumbBar>
     <AppContent :sections="sections" :active-id="activeId" />
   </v-app>
 </template>

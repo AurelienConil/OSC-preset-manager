@@ -1,11 +1,11 @@
-// Picks the renderer transport: WebSocket in dev, IPC in prod.
-import { WS_DEV_PORT } from '@template/shared'
+// Creates the renderer transport: always the WebSocket of main (dev and prod, CLAUDE.md §4).
+import { WS_PORT } from '@template/shared'
 import type { ClientTransport } from '@template/sdk/frontend'
 import { WsClientTransport } from './ws-client-transport'
-import { IpcClientTransport } from './ipc-client-transport'
 
 export function createClientTransport(): ClientTransport {
-  return import.meta.env.DEV
-    ? new WsClientTransport(`ws://localhost:${WS_DEV_PORT}`)
-    : new IpcClientTransport()
+  // Same machine that served the page: localhost in Electron (file:// has no
+  // hostname), the computer's LAN address on a phone.
+  const host = window.location.hostname || 'localhost'
+  return new WsClientTransport(`ws://${host}:${WS_PORT}`)
 }

@@ -1,12 +1,14 @@
 # CLAUDE.md
 
-Instructions pour Claude sur ce dépôt : template Electron en TypeScript,
-organisé en plugins (monorepo pnpm). Le README.md s'adresse aux humains ;
+Instructions pour Claude sur ce dépôt : centrale de contrôle OSC live
+(cahier des charges fonctionnel : `SPEC.md`), bâtie sur un template Electron
+en TypeScript organisé en plugins (monorepo pnpm). Le README.md s'adresse aux humains ;
 ce fichier dit **où sont les choses, quelles règles respecter et comment
 procéder**. Guide détaillé d'écriture d'un plugin : `plugins/README.md`.
 
 Stack : TypeScript strict, zod, Electron + electron-vite, Vue 3 + Vuetify 4,
-Vitest. Transport WebSocket en dev, IPC en prod.
+Vitest. Transport WebSocket **en dev comme en prod** (multi-clients : fenêtre
+Electron + téléphone), voir §4 « Host et frontières ».
 
 ---
 
@@ -19,45 +21,26 @@ Vitest. Transport WebSocket en dev, IPC en prod.
 | `pnpm test` | Tous les tests ; `pnpm test plugins` / `pnpm test packages` pour filtrer |
 | `pnpm --filter @template/plugin-<nom> test` | Tests d'un seul plugin |
 | `pnpm build` | Build electron-vite → `out/` |
-| `pnpm dev` / `pnpm start` | App en dev (WS) / build de prod en local (IPC) |
+| `pnpm dev` / `pnpm start` | App en dev (UI servie par Vite) / build de prod en local (UI distante sur le port 8791) |
 
 Avant de dire « terminé » : `pnpm typecheck`, `pnpm test`, `pnpm build`.
 Lancer l'app depuis un terminal VS Code : `env -u ELECTRON_RUN_AS_NODE pnpm dev`.
 
 ---
 
-## 2. Plugins d'exemple : statut
+## 2. Plugin de référence
 
-`plugins/osc` et `plugins/weather` sont **des exemples pédagogiques**, pas du
-code produit. Ils existent pour montrer, commentés en détail :
-- deux plugins qui ont chacun besoin du backend et d'une UI ;
-- une règle du **mediator** (`packages/main/src/app-wiring.ts`) qui les relie :
-  un message OSC `/weather/city "Lyon"` change la ville météo.
+Les plugins d'exemple du template (`osc`, `weather`) ont été retirés. La
+référence pour écrire un plugin est désormais `plugins/show` (lire dans
+l'ordre dto → contract → manager → plugin → composable) :
+- Manager possédant des ressources (sockets UDP, timers) : `show-manager.ts`,
+  `osc/osc-udp-io.ts` ;
+- donnée tierce validée explicitement : fichier show (`show/show-store.ts`),
+  paquets réseau (`osc/osc-packet-decoder.ts`) ;
+- dépendance injectée par interface : `OscIo`, `TransportClock`.
 
-Ce qui relève des exemples, partout dans le dépôt (chaque fichier est marqué `EXAMPLE`) :
-
-| Où | Quoi |
-|---|---|
-| `plugins/osc/`, `plugins/weather/` | Les plugins (contrat, backend, composable, tests) |
-| `packages/main/src/app-wiring.ts` | La règle `forwardOscCityToWeather` (pas le fichier) |
-| `packages/main/src/app-wiring.test.ts` | Les tests de cette règle |
-| `packages/main/src/plugin-registry.ts` | Leurs deux entrées |
-| `packages/renderer/src/pages/ExamplePage.vue`, `pages/example/` | Leur UI (composants Vue) |
-| `packages/renderer/src/navigation/sections.ts` | L'entrée `example` de la sidebar |
-| `package.json` racine | Leurs deux `devDependencies` |
-
-Ne relèvent **pas** des exemples (génériques, à garder) :
-`renderer/src/composables/use-async-action.ts`, les classes `.field-narrow`
-et `.scroll-list` de `app-classes.css`.
-
-Conséquences pour Claude :
-- Les prendre comme **référence** pour écrire un plugin (lire dans l'ordre
-  dto → contract → manager → plugin → composable).
-- Ne jamais construire une fonctionnalité réelle du projet par-dessus.
-- Quand l'utilisateur démarre son vrai projet ou demande de retirer les
-  exemples : appliquer §5.1, qui **vide** `app-wiring.ts` de la règle
-  d'exemple sans supprimer le fichier.
-- Tant qu'ils sont là, le code qui les référence est marqué `EXAMPLE`.
+Le mediator (`app-wiring.ts`) ne contient que la transmission au GUI des
+pushes de `show` : un seul plugin pour l'instant.
 
 ---
 
@@ -66,12 +49,28 @@ Conséquences pour Claude :
 ```
 packages/
 ├── sdk/        # contrat de plugin : defineContract, definePlugin, protocole filaire, client Vue, PluginTestHarness
-├── shared/     # constantes transport : canal IPC, port WS de dev
-├── main/       # HOST : bootstrap Electron, plugin host, transports WS/IPC, mediator
-├── preload/    # pont contextBridge générique (send / onMessage)
+├── shared/     # constantes transport : ports WS et HTTP (UI distante)
+├── main/       # HOST : bootstrap Electron, plugin host, transport WS, serveur UI distante, mediator
+├── preload/    # vide : aucune API Electron exposée à la page
 └── renderer/   # app Vue 3 + Vuetify : shell, pages, composants
-plugins/        # plugins en workspace (EXEMPLES : osc, weather)
+plugins/        # plugins en workspace : show (le produit)
 ```
+
+Le produit vit dans `plugins/show` :
+
+| Dossier | Rôle |
+|---|---|
+| `src/show.dto.ts`, `show.contract.ts` | Fichier show (setup + presets), snapshot, live frames, requêtes |
+| `src/modulation.ts` | Maths pures partagées back/front : LFO, courbe, mise à l'échelle (export `./modulation`) |
+| `src/backend/show-manager.ts` | Orchestrateur : show ouvert, preset actif, boucle d'envoi, frames GUI |
+| `src/backend/show/` | `ShowDocument` (règles d'édition, preset 0), `ShowStore` (JSON sous `userData/shows/`) |
+| `src/backend/engine/` | Boucle à cadence fixe, pin matrix (`InputRouter`), limiteur de débit |
+| `src/backend/clock/` | `TransportClock` (interface) + horloge interne ; Ableton Link s'y branchera |
+| `src/backend/osc/` | Encodeur / décodeur OSC, sockets UDP |
+
+Côté renderer : `pages/ParametersPage.vue`, `PinMatrixPage.vue`, `PresetsPage.vue`,
+`SetupPage.vue` (sous-composants dans `pages/<page>/`), `components/show/TransportBar.vue`,
+et `composables/show-context.ts` (une seule instance de `useShow()`, fournie par `App.vue`).
 
 Le host ne connaît aucun plugin en particulier, **sauf à ces endroits** :
 
@@ -88,7 +87,8 @@ Autres fichiers clés :
 |---|---|
 | `packages/main/src/index.ts` | Bootstrap : fenêtre, lifecycle, choix du transport. Câblage uniquement |
 | `packages/main/src/plugin-host/plugin-host.ts` | Charge les plugins, route les requêtes, arrête les Managers |
-| `packages/main/src/transport/` | `WsHostTransport` (dev) / `IpcHostTransport` (prod) |
+| `packages/main/src/transport/` | `WsHostTransport` (dev et prod) |
+| `packages/main/src/remote-ui/` | Serveur HTTP de l'UI construite, pour un téléphone (prod) |
 | `packages/main/src/path-provider/app-data-path-provider.ts` | Chemins confinés sous `userData` |
 | `packages/sdk/src/backend/plugin-context.types.ts` | Ce qu'un plugin reçoit du host (`handle`, `push`, `paths`) |
 | `packages/renderer/src/navigation/sections.ts` | Pages de la sidebar |
@@ -108,8 +108,8 @@ uniquement par `electron-vite dev`). Ne pas utiliser `app.isPackaged`.
 - Un DTO = un schéma zod, type dérivé par `z.infer`.
 - Ne jamais appeler `.parse()` sur les données du contrat : le host et le
   client SDK valident déjà. Valider en revanche explicitement toute donnée
-  tierce (réponse d'API : voir `open-meteo.schemas.ts` ; paquet réseau : un
-  décodeur qui lève une erreur explicite).
+  tierce (fichier lu sur disque : voir `show-store.ts` ; paquet réseau : un
+  décodeur qui lève une erreur explicite, voir `osc-packet-decoder.ts`).
 - Le Manager porte la logique : ni SDK runtime, ni Electron, ni transport.
   Il reçoit ses dépendances au constructeur (callbacks, interface d'API,
   `PathProvider`). Composition, jamais héritage.
@@ -129,11 +129,23 @@ uniquement par `electron-vite dev`). Ne pas utiliser `app.isPackaged`.
 - Utiliser `host.client(contract)` (même API `request` / `on` que le renderer).
 - Toute requête déclenchée depuis un listener de push a un `.catch()` qui
   journalise : personne n'attend un listener.
-- Chaque règle est testée dans `app-wiring.test.ts` avec de faux plugins.
+- **Aucun push n'atteint le GUI par défaut** : le mediator transmet
+  explicitement chaque push destiné à l'interface, avec
+  `host.gui.forward(contract, ...pushes)`, dans une règle dédiée (exemple :
+  `forwardShowToGui`). Un plugin peut donc pousser des événements internes à
+  haute fréquence sans saturer le WebSocket. Un push qui n'atteint personne
+  déclenche un avertissement unique en console.
+- Chaque règle est testée dans `app-wiring.test.ts`.
 
 **Host et frontières**
 - `main/src/index.ts` ne fait que du câblage.
-- Toute donnée qui traverse une frontière (WS, IPC, réseau) est validée.
+- **Dérogation au template (SPEC §10)** : le renderer parle à main **toujours
+  en WebSocket** (`WS_PORT`), en dev comme en prod, pour accepter plusieurs
+  clients. En prod, `remote-ui/remote-ui-server.ts` sert l'UI construite en
+  HTTP (`REMOTE_UI_HTTP_PORT`) pour un téléphone sur le LAN. Le transport IPC
+  du template a été retiré, et le preload est vide. Pas d'authentification :
+  réseau de confiance uniquement.
+- Toute donnée qui traverse une frontière (WS, réseau, disque) est validée.
   Jamais de `any` ni de cast non validé à une frontière.
 - TypeScript strict, `noEmit` : chaque package a un `tsconfig.json` limité à
   `extends`, `include` et son environnement. Aucun `dist/`.
@@ -147,30 +159,17 @@ uniquement par `electron-vite dev`). Ne pas utiliser `app.isPackaged`.
 
 ## 5. Procédures
 
-### 5.1 Retirer les plugins d'exemple
+### 5.1 Retirer un plugin
 
-1. `packages/main/src/plugin-registry.ts` : retirer `oscPlugin` et
-   `weatherPlugin` (le tableau peut rester vide).
-2. `packages/main/src/app-wiring.ts` : **vider** le fichier de l'exemple —
-   supprimer `forwardOscCityToWeather`, `WEATHER_CITY_OSC_ADDRESS` et les
-   imports des contrats. Garder le commentaire d'en-tête (sans le paragraphe
-   `EXAMPLE RULE`) et `wireApp` avec un corps vide :
-
-   ```ts
-   export function wireApp(_host: PluginHost): void {
-     // No cross-plugin rule yet: add one function per rule, call it here.
-   }
-   ```
-
-   (`_host` : préfixe requis par `noUnusedParameters` tant qu'il n'y a pas de règle.)
-3. `packages/main/src/app-wiring.test.ts` : supprimer le fichier.
-4. `packages/renderer/src/pages/ExamplePage.vue`, `pages/example/` et l'entrée
-   `example` de `navigation/sections.ts` : supprimer.
-5. `package.json` racine : retirer `@template/plugin-osc` et
-   `@template/plugin-weather`, puis `pnpm install`.
-6. Supprimer `plugins/osc` et `plugins/weather`.
-7. Mettre à jour §2 et §3 de ce fichier, et la section des exemples du README.
-8. `pnpm typecheck && pnpm test && pnpm build`.
+1. Sa ligne dans `packages/main/src/plugin-registry.ts` (le tableau peut rester vide).
+2. Ses règles dans `app-wiring.ts`, dont la transmission de ses pushes au GUI,
+   et leurs tests (garder `wireApp`, même vide :
+   `wireApp(_host: PluginHost)`, préfixe requis par `noUnusedParameters`).
+3. Ses pages dans `renderer/src/pages/` et leurs entrées de `navigation/sections.ts`.
+4. Sa `devDependency` dans le `package.json` racine, puis `pnpm install`.
+5. Son dossier `plugins/<nom>`.
+6. Mettre à jour §2 et §3 de ce fichier, et le README.
+7. `pnpm typecheck && pnpm test && pnpm build`.
 
 ### 5.2 Créer un plugin
 
@@ -182,7 +181,9 @@ Suivre `plugins/README.md` (structure, `package.json`, checklist). En bref :
 2. `package.json` racine : `"@template/plugin-<nom>": "workspace:*"` en
    `devDependencies`, puis `pnpm install`.
 3. Une ligne dans `plugin-registry.ts`.
-4. Le consommer depuis un composant de `renderer/src/pages/`.
+4. Transmettre au GUI les pushes écoutés par son composable : une règle
+   `forward<Nom>ToGui` dans `app-wiring.ts`, et son test.
+5. Le consommer depuis un composant de `renderer/src/pages/`.
 
 Ce sont plusieurs fichiers : lister les fichiers concernés et obtenir
 l'accord de l'utilisateur avant de coder.
@@ -192,7 +193,8 @@ l'accord de l'utilisateur avant de coder.
 Dans `app-wiring.ts` : une fonction nommée d'après la règle, qui reçoit les
 `PluginClient` nécessaires, s'abonne aux pushes de l'un et appelle les
 requêtes de l'autre ; l'appeler dans `wireApp`. Ajouter son test dans
-`app-wiring.test.ts` (modèle : le test de la règle d'exemple). Si le plugin
+`app-wiring.test.ts` (faux plugins définis dans le test, branchés sur un vrai
+`PluginHost` avec un faux transport, comme dans `plugin-host.test.ts`). Si le plugin
 cible doit refléter le changement dans l'UI, il doit émettre un push : le
 mediator ne parle jamais au renderer.
 
@@ -257,8 +259,8 @@ voisin, importé uniquement par les tests.
 - **Plugin** : vrai `setup` dans `PluginTestHarness` (`@template/sdk/testing`),
   qui valide comme le host. `harness.request`, `harness.pushesOf`, `harness.stop`.
 - **Mediator** : `app-wiring.test.ts`, faux plugins définis dans le test.
-- **Core** : `plugin-host.test.ts` (plugin `echo` local, indépendant des
-  exemples), `app-data-path-provider.test.ts`.
+- **Core** : `plugin-host.test.ts` (plugin `echo` local),
+  `app-data-path-provider.test.ts`, `remote-ui-server.test.ts`.
 
 Chaque plugin a `vitest` en `devDependencies` et `"test": "vitest run"`.
 
@@ -273,8 +275,10 @@ Chaque plugin a `vitest` en `devDependencies` et `"test": "vitest run"`.
   `resolve.dedupe: ['vue']` évite une double copie de Vue.
 - `ELECTRON_RUN_AS_NODE=1` hérité de VS Code : Electron démarre en simple
   Node (`reading 'whenReady'`). Lancer avec `env -u ELECTRON_RUN_AS_NODE`.
-- WS (dev) et IPC (prod) sont deux chemins de code : un changement de
-  transport se vérifie aussi avec `pnpm build && pnpm start`.
+- Dev et prod ne servent pas l'UI pareil (Vite vs `RemoteUiServer` /
+  `loadFile`) : un changement côté transport ou chargement se vérifie aussi
+  avec `pnpm build && pnpm start`.
+- `pnpm` absent du PATH : passer par `corepack pnpm`.
 
 ---
 

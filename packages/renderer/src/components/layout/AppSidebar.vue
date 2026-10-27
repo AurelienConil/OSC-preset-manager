@@ -1,5 +1,6 @@
-<!-- Role: retractable navigation drawer (nav items + inert Help/Account footer). -->
+<!-- Role: retractable navigation drawer (nav items + collapse button); always icons-only on a phone. -->
 <script setup lang="ts">
+import { useDisplay } from 'vuetify'
 import type { NavigationSection } from '../../navigation/types'
 
 defineProps<{
@@ -12,12 +13,14 @@ defineEmits<{
   select: [id: string]
   'toggle-collapse': []
 }>()
+
+const { smAndDown } = useDisplay()
 </script>
 
 <template>
   <!-- `rail` is Vuetify's built-in collapsed state: icons only, no labels. -->
-  <v-navigation-drawer permanent :rail="collapsed" width="220" class="app-sidebar">
-    <div v-if="!collapsed" class="app-nav-label">Navigation</div>
+  <v-navigation-drawer permanent :rail="collapsed || smAndDown" width="220" class="app-sidebar">
+    <div v-if="!collapsed && !smAndDown" class="app-nav-label">Navigation</div>
     <v-list nav>
       <v-list-item
         v-for="section in sections"
@@ -31,9 +34,8 @@ defineEmits<{
 
     <template #append>
       <v-list nav>
-        <v-list-item prepend-icon="mdi-help-circle-outline" title="Aide" />
-        <v-list-item prepend-icon="mdi-account-outline" title="Compte" />
         <v-list-item
+          v-if="!smAndDown"
           :prepend-icon="collapsed ? 'mdi-chevron-right' : 'mdi-chevron-left'"
           title="Réduire"
           @click="$emit('toggle-collapse')"

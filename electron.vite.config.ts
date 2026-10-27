@@ -32,6 +32,8 @@ export default defineConfig({
     plugins: [vue(), vuetify({ autoImport: true })],
     // Force a single Vue copy (silences Vuetify's onScopeDispose warnings).
     resolve: { dedupe: ['vue'] },
+    // Listen on the LAN in development too, so a phone can open the GUI.
+    server: { host: true },
     build: {
       rollupOptions: {
         input: 'packages/renderer/index.html',

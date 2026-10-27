@@ -1,4 +1,4 @@
-// What the renderer-side RPC connection needs from a transport (WS in dev, IPC in prod).
+// What the renderer-side RPC connection needs from a transport (WebSocket in this app).
 import type { RequestMessage } from '../protocol/wire-message'
 
 export interface ClientTransport {

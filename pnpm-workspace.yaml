@@ -1,4 +1,4 @@
-# Declares the pnpm workspaces of the monorepo (host packages + in-repo example plugins).
+# Declares the pnpm workspaces of the monorepo (host packages + in-repo plugins).
 packages:
   - 'packages/*'
   - 'plugins/*'

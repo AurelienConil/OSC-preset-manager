@@ -1,4 +1,4 @@
-// Wire protocol between renderer and main (WS or IPC): zod schemas of every message.
+// Wire protocol between renderer and main (any transport): zod schemas of every message.
 import { z } from 'zod'
 
 export const RequestMessage = z.object({

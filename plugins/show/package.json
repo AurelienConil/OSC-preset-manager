@@ -1,0 +1,28 @@
+{
+  "name": "@template/plugin-show",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Show plugin: show file (setup + presets), modulation engine, OSC in/out, pin matrix and transport clock.",
+  "exports": {
+    ".": "./src/show.contract.ts",
+    "./dto": "./src/show.dto.ts",
+    "./modulation": "./src/modulation.ts",
+    "./backend": "./src/backend/show-plugin.ts",
+    "./frontend": "./src/frontend/use-show.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@template/sdk": "^1.0.0",
+    "vue": "^3.5.42",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@template/sdk": "workspace:*",
+    "vitest": "^3.2.7",
+    "vue": "^3.5.42",
+    "zod": "^3.23.8"
+  }
+}

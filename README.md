@@ -1,4 +1,27 @@
-# Electron Workflow Template
+# OSC Preset Manager
+
+Centrale de contrôle OSC pour le spectacle vivant : presets globaux, courbes,
+oscillateurs, pin matrix, transport. Cahier des charges : [SPEC.md](SPEC.md).
+
+- **Paramètres** : chaque paramètre déclaré, en valeur fixe, courbe dessinée ou
+  LFO synchronisé au transport ; navigation par groupes d'adresses et filtres.
+- **Pin matrix** : relie des entrées OSC à des paramètres, par preset.
+- **Presets** : rappel instantané, création depuis le preset 0, duplication,
+  réordonnancement, suppression ; fichier show et ports OSC.
+- **Setup** : déclaration des paramètres et des entrées (les adresses reçues
+  sont détectées et proposées), ou édition du setup en JSON.
+
+Par défaut : entrée OSC sur le port UDP 9000, sortie vers `127.0.0.1:9001`.
+Les shows sont enregistrés automatiquement dans le dossier de données de
+l'application (`shows/<nom>.json`).
+
+**Depuis un téléphone** (même réseau) : `http://<ip-de-l-ordinateur>:8791`
+avec `pnpm start` / l'app installée, ou `http://<ip>:5173` avec `pnpm dev`.
+Aucune authentification : à n'utiliser que sur un réseau de confiance.
+
+---
+
+## Le template de départ
 
 Un point de départ pour une application de bureau Electron, organisée en
 **plugins** : chaque fonctionnalité est un petit module indépendant, avec sa
@@ -45,8 +68,8 @@ Si pnpm manque : `corepack enable`.
 | `pnpm exec electron-builder` | Créer l'installable (dans `release/`) |
 
 Pensez à tester de temps en temps avec `pnpm build && pnpm start` : le mode
-développement et le mode production ne communiquent pas de la même façon
-en interne.
+développement et le mode production ne servent pas l'interface de la même
+façon.
 
 ---
 
@@ -90,31 +113,3 @@ doit faire quelque chose »), la règle s'écrit dans un seul fichier :
 [packages/main/src/app-wiring.ts](packages/main/src/app-wiring.ts), le
 **mediator**. C'est la pièce centrale du projet : toutes les interactions
 entre fonctionnalités y sont réunies, lisibles d'un coup d'œil.
-
----
-
-## Les plugins d'exemple (à supprimer)
-
-Le template est livré avec deux plugins **d'exemple**, visibles dans la page
-« Exemple » de l'application :
-
-- **osc** : reçoit des messages OSC (protocole réseau courant en musique et en
-  arts numériques). On choisit le port, puis on démarre et on arrête le
-  serveur depuis l'interface.
-- **weather** : affiche la température du jour d'une ville, via l'API
-  gratuite Open-Meteo.
-
-Le mediator contient une règle d'exemple qui les relie : un message OSC
-`/weather/city "Lyon"` change la ville affichée par la météo. Pour essayer,
-démarrer le serveur OSC sur le port 9000, puis envoyer ce message depuis
-n'importe quel outil OSC (TouchOSC, Max, Pure Data…).
-
-Un exemple, ce n'est pas seulement le dossier du plugin : son interface (la
-page « Exemple » et ses cartes, dans `packages/renderer/src/pages/`) et la
-règle du mediator en font aussi partie. Tous ces fichiers sont marqués
-`EXAMPLE` en tête.
-
-Ces exemples sont commentés en détail : lisez-les pour comprendre la
-démarche, puis **supprimez-les** quand votre premier plugin existe. Il faut
-alors aussi vider le mediator de la règle d'exemple. La liste exacte des
-fichiers à retirer est dans [CLAUDE.md](CLAUDE.md), §5.1.

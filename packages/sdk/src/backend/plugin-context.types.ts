@@ -19,6 +19,6 @@ export interface PluginContext<C extends PluginContract> {
   /** Payload and result are validated by the host against the contract. */
   handle<N extends RequestName<C>>(name: N, handler: RequestHandler<C, N>): void
 
-  /** Payload is validated against the contract, then sent to the GUI and to main listeners. */
+  /** Payload is validated against the contract, then given to main listeners; it reaches the GUI only if the app mediator forwards it. */
   push<N extends PushName<C>>(name: N, payload: PushInput<C, N>): void
 }

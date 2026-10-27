@@ -101,17 +101,49 @@ describe('PluginHost requests from the transport', () => {
 })
 
 describe('PluginHost pushes, main-side client and stop', () => {
-  it('validates a push, broadcasts it and notifies main-side listeners', () => {
-    const { host, broadcasts } = createHost()
+  function loadWithPush() {
+    const created = createHost()
     let push: EchoContext['push'] = () => {}
-    host.load([createEchoPlugin((context) => { handleEcho(context); push = context.push })])
+    created.host.load([createEchoPlugin((context) => { handleEcho(context); push = context.push })])
+    return { ...created, push: (text: string) => push('said', { text }) }
+  }
+
+  it('notifies main-side listeners but sends nothing to the GUI by default', () => {
+    const { host, broadcasts, push } = loadWithPush()
     const listener = vi.fn()
     host.client(echoContract).on('said', listener)
 
-    push('said', { text: 'hello' })
+    push('hello')
+
+    expect(listener).toHaveBeenCalledWith({ text: 'hello' })
+    expect(broadcasts).toEqual([])
+  })
+
+  it('broadcasts a push to the GUI once the mediator forwards it', () => {
+    const { host, broadcasts, push } = loadWithPush()
+    host.gui.forward(echoContract, 'said')
+
+    push('hello')
 
     expect(broadcasts).toEqual([{ kind: 'push', plugin: 'echo', name: 'said', payload: { text: 'hello' } }])
-    expect(listener).toHaveBeenCalledWith({ text: 'hello' })
+  })
+
+  it('warns once when a push reaches nobody', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const { push } = loadWithPush()
+
+    push('a')
+    push('b')
+
+    expect(warn).toHaveBeenCalledOnce()
+    expect(warn.mock.calls[0]?.[0]).toMatch(/"echo:said" reaches nobody.*host\.gui\.forward/)
+  })
+
+  it('refuses to forward a push of an unloaded plugin or an undeclared push', () => {
+    const { host } = createHost()
+    expect(() => host.gui.forward(echoContract, 'said')).toThrow(/not loaded/)
+    host.load([createEchoPlugin()])
+    expect(() => host.gui.forward(echoContract, 'nope' as never)).toThrow(/declares no push "nope"/)
   })
 
   it('throws on a push that breaks the contract', () => {

@@ -14,6 +14,7 @@ import { RequestRouter } from './request-router'
 import { PushHub } from './push-hub'
 import { createPluginContext } from './create-plugin-context'
 import { InProcessPluginClient } from './in-process-plugin-client'
+import { GuiForwarding } from './gui-forwarding'
 
 export interface PluginHostOptions {
   transport: HostTransport
@@ -25,9 +26,11 @@ export class PluginHost {
   private readonly pushHub: PushHub
   private readonly loadedIds = new Set<string>()
   private readonly stoppables: StoppableManager[] = []
+  /** Which pushes reach the GUI: none until the mediator forwards them. */
+  readonly gui = new GuiForwarding((pluginId) => this.loadedIds.has(pluginId))
 
   constructor(private readonly options: PluginHostOptions) {
-    this.pushHub = new PushHub((message) => options.transport.broadcast(message))
+    this.pushHub = new PushHub((message) => options.transport.broadcast(message), this.gui)
     options.transport.onMessage((raw, reply) => void this.receive(raw, reply))
   }
 

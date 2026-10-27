@@ -5,18 +5,16 @@ an empty folder to a feature you can call from a Vue component.
 
 The examples build a small `counter` plugin: one request to read the value, one
 to increment it, and one push that notifies the UI whenever the value changes.
-The two plugins already in this folder follow exactly the same structure and
-are commented in detail. Read them alongside this guide, in this order:
-dto → contract → manager → plugin → composable.
+The `show` plugin in this folder follows the same structure: read it
+alongside this guide, in this order: dto → contract → manager → plugin →
+composable.
 
-| Example | Why it needs the backend | What it shows |
-|---|---|---|
-| `osc` | UDP socket (`node:dgram`) | Manager owning a resource (`StoppableManager`), status + data pushes, hand-written decoder of untrusted network packets |
-| `weather` | HTTP call to Open-Meteo | Manager depending on an interface (`WeatherApi`) instead of a concrete client, third-party response validated with zod, out-of-order answers |
+| Reference | What it shows |
+|---|---|
+| `show` | Manager owning resources (UDP sockets, timers) behind interfaces (`OscIo`, `TransportClock`), third-party data validated explicitly (show files, OSC packets), snapshot + patch + throttled pushes |
 
-They are linked only by the **app mediator** (section 5): an OSC message
-`/weather/city "Lyon"` changes the weather city. Both plugins and that rule
-are examples, to be removed in a real project (root `CLAUDE.md`, §5.1).
+The template's original example plugins (`osc`, `weather`) have been removed
+from this project.
 
 ---
 
@@ -50,7 +48,7 @@ status icon and a full details panel can both use the same composable.
 You don't write any transport, validation or wiring code. The host:
 
 - validates every request payload, response and push against your contract
-  (zod), on both sides of the WebSocket/IPC boundary;
+  (zod), on both sides of the WebSocket boundary;
 - prefixes every name with your plugin id (`counter:increment`), so plugins
   can't collide;
 - matches each response to its request, so concurrent calls never get mixed up;
@@ -264,8 +262,9 @@ export default definePlugin({
   compatibility check could never fail.
 - `context.handle(name, handler)`: `request` is already validated and typed
   from the contract. The handler may return a value or a Promise.
-- `context.push(name, payload)`: the payload is validated, then sent to every
-  window and to main-side listeners.
+- `context.push(name, payload)`: the payload is validated, then given to
+  main-side listeners. It reaches the GUI **only if the app mediator forwards
+  it** (section 4.3), so a push can also carry internal, high-rate events.
 - `context.paths`: the host's `PathProvider`. Pass it to any Manager that
   writes to disk: it only ever gets paths relative to the app data folder.
 - Return the Manager (or anything with `stop()`) so the host can stop it.
@@ -340,16 +339,34 @@ One line in [`packages/main/src/plugin-registry.ts`](../packages/main/src/plugin
 ```ts
 import counterPlugin from '@template/plugin-counter/backend'
 
-export const enabledPlugins = [oscPlugin, weatherPlugin, counterPlugin]
+export const enabledPlugins = [showPlugin, counterPlugin]
 ```
 
-### 4.3 Typecheck
+### 4.3 Forward its pushes to the GUI
+
+No push reaches the GUI by default: the application decides, in
+[`packages/main/src/app-wiring.ts`](../packages/main/src/app-wiring.ts). Add
+one rule listing the pushes your composable listens to, and call it in
+`wireApp()`:
+
+```ts
+export function forwardCounterToGui(gui: Pick<GuiForwarding, 'forward'>): void {
+  gui.forward(counterContract, 'changed')
+}
+```
+
+Forgetting it leaves the GUI silent. Two guards: at runtime the host warns
+once about a push that reaches nobody (neither forwarded nor listened to in
+main), and `app-wiring.test.ts` checks that the forwarded pushes are exactly
+the ones intended (see the test of `forwardShowToGui`).
+
+### 4.4 Typecheck
 
 Nothing to declare: `pnpm typecheck` runs `vue-tsc -p .` in every workspace
 package, so an in-repo plugin with its own `tsconfig.json` is covered
 automatically.
 
-### 4.4 Use it in a component
+### 4.5 Use it in a component
 
 ```vue
 <!-- Role: counter widget with an increment button. -->
@@ -378,8 +395,8 @@ This file is the keystone of the project: every cross-plugin behaviour is
 there, and every plugin stays reusable in another app.
 
 `host.client(contract)` gives the same typed API as the composable, from the
-main process. Write one function per rule; `wireApp()` only lists them. The
-example rule:
+main process. Write one function per rule; `wireApp()` only lists them. An
+illustrative rule (an OSC plugin changing the city of a weather plugin):
 
 ```ts
 function forwardOscCityToWeather(
@@ -401,8 +418,9 @@ export function wireApp(host: PluginHost): void {
 }
 ```
 
-The weather card in the GUI updates by itself: `setCity` makes the weather
-plugin push `updated`, which reaches every window.
+The GUI updates by itself: `setCity` makes the weather plugin push `updated`,
+which reaches every window, provided the mediator forwards it
+(`host.gui.forward(weatherContract, 'updated')`).
 
 Design your pushes so that other plugins *can* react to them, but never assume
 who listens. Test each rule in `app-wiring.test.ts` with fake plugins.
@@ -413,7 +431,7 @@ who listens. Test each rule in `app-wiring.test.ts` with fake plugins.
 
 Tests use **Vitest** and live next to the file they test, in `src/`. Run them
 with `pnpm --filter @template/plugin-counter test`, or `pnpm test` at the root
-(all plugins + host). Examples: `plugins/osc` and `plugins/weather`.
+(all plugins + host). Reference: `plugins/show`.
 
 - **Manager** (`counter-manager.test.ts`): plain Node, no Electron, no host.
   Instantiate it with a fake callback or a fake `PathProvider` that points to
@@ -433,8 +451,8 @@ with `pnpm --filter @template/plugin-counter test`, or `pnpm test` at the root
   await harness.stop()                                 // stops the Manager returned by setup
   ```
 
-- **In the app**: `pnpm dev` (WebSocket), then `pnpm build && pnpm start`
-  (IPC). Test both: they are two different transports. From the VS Code
+- **In the app**: `pnpm dev`, then `pnpm build && pnpm start`. Test both: the
+  GUI is not served the same way (Vite vs the built files). From the VS Code
   terminal, use `env -u ELECTRON_RUN_AS_NODE pnpm dev`.
 
 ---
@@ -470,4 +488,5 @@ with `pnpm --filter @template/plugin-counter test`, or `pnpm test` at the root
 - [ ] Composable: called in `setup`, listeners cleaned up with `onScopeDispose`, no DOM
 - [ ] Tests: Manager unit tests + plugin tests through `PluginTestHarness` (`pnpm test` green)
 - [ ] Dependency in the root `package.json` plus one line in `plugin-registry.ts`
+- [ ] Its GUI pushes forwarded in `app-wiring.ts` (`host.gui.forward`), with a test
 - [ ] Tested in `pnpm dev` **and** `pnpm build && pnpm start`

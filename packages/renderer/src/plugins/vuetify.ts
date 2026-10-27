@@ -34,7 +34,8 @@ export default createVuetify({
     VSwitch: { hideDetails: true, color: 'accent' },
   },
   theme: {
-    defaultTheme: LIGHT_THEME,
+    // Dark by default: the app runs in a dark venue, during a show.
+    defaultTheme: DARK_THEME,
     themes: {
       // Light, warm-grey palette in the spirit of Notion.
       [LIGHT_THEME]: {

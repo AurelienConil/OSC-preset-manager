@@ -82,6 +82,19 @@
 .cell-strong {
   font-weight: 500;
 }
+/* Segment of an OSC address that filters the parameters on its group. */
+.address-link {
+  font: inherit;
+  color: var(--app-accent);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.address-link:hover,
+.address-link:focus-visible {
+  text-decoration: underline;
+}
 /* Fixed-width trailing column holding the per-row action menu. */
 .col-actions {
   width: 56px;
@@ -125,4 +138,161 @@
 .scroll-list {
   max-height: 260px;
   overflow: auto;
+}
+
+/* Bigger cap of .scroll-list, for the main table of a page. */
+.scroll-list-tall {
+  max-height: 480px;
+  overflow: auto;
+}
+
+/* Trailing column holding two row action buttons. */
+.col-actions-wide {
+  width: 96px;
+}
+
+/* Highlighted table row: the active item (e.g. the recalled preset). */
+.row-active {
+  background: color-mix(in srgb, var(--app-accent) 12%, transparent);
+}
+
+/* Small caption above a slider or a button group. */
+.slider-label {
+  font-size: 0.75rem;
+  color: var(--app-text-soft);
+}
+
+/* ============================================================
+   FILTERS — search + type filters above a list
+   ============================================================ */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+.filter-bar-search {
+  flex: 1 1 240px;
+}
+.filter-bar-types {
+  flex: 0 1 260px;
+  min-width: 180px;
+}
+
+/* ============================================================
+   SHOW — transport, parameters, curves, pin matrix
+   ============================================================ */
+.transport-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 8px;
+}
+.field-bpm {
+  flex: 0 0 84px;
+}
+.transport-beat {
+  min-width: 40px;
+  font-variant-numeric: tabular-nums;
+}
+.transport-progress {
+  width: 72px;
+}
+.transport-preset {
+  flex: 0 0 180px;
+  max-width: 180px;
+}
+
+.group-trail {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.param-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.param-control-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.param-control-title {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+/* A parameter hidden in this preset, shown because "afficher les masqués" is on. */
+.param-control--hidden {
+  opacity: 0.55;
+}
+.param-live-value {
+  min-width: 72px;
+  text-align: right;
+  color: var(--app-text-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.lfo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px 16px;
+  align-items: end;
+}
+
+.curve-canvas {
+  display: block;
+  width: 100%;
+  height: 72px;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-sm);
+  background: var(--app-bg-subtle);
+}
+.curve-canvas--clickable {
+  cursor: pointer;
+}
+/* Editable curve: taller, and touch gestures draw instead of scrolling the page. */
+.curve-canvas--editor {
+  height: 280px;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.pin-matrix {
+  max-height: 70vh;
+  overflow: auto;
+}
+.pin-matrix-row-head {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--app-surface);
+  white-space: nowrap;
+}
+/* Column headers written vertically, so dozens of parameters fit in the width. */
+.pin-matrix-col {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  height: 160px;
+  text-transform: none !important;
+}
+.pin-matrix-cell {
+  text-align: center;
+}
+
+/* Live value of an input outside its declared range: the bound it was clamped to. */
+.value-saturated {
+  color: var(--app-danger);
+  font-weight: 600;
+}
+
+.json-editor textarea {
+  font-family: var(--app-mono);
+  font-size: 0.8rem;
 }

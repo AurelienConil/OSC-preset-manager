@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Electron template: plugin host (main / preload / renderer) + plugin SDK + two example plugins (OSC, weather) wired by the app mediator",
+  "description": "OSC live control centre: presets, curves, LFOs, pin matrix and transport (Electron plugin host + show plugin).",
   "main": "out/main/index.cjs",
   "scripts": {
     "dev": "electron-vite dev",
@@ -17,8 +17,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@template/plugin-osc": "workspace:*",
-    "@template/plugin-weather": "workspace:*",
+    "@template/plugin-show": "workspace:*",
     "@template/sdk": "workspace:*",
     "@types/node": "^22.7.0",
     "@types/ws": "^8.5.12",

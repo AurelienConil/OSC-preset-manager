@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Electron main process: plugin host, WS (dev) / IPC (prod) transports, app wiring.",
+  "description": "Electron main process: plugin host, WebSocket transport, remote GUI server, app wiring.",
   "main": "./src/index.ts",
   "dependencies": {
     "@template/sdk": "workspace:*",
